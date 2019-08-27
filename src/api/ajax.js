@@ -1,12 +1,7 @@
 /*
-    ajax请求函数模板
-    发送请求有三个参数：
-        1. url
-        2. 请求参数（以对象形式传）
-        3. 请求方式
-    ajax的返回值 promise对象(异步返回的数据是：response.data)
-
-*/
+ajax请求函数模块
+返回值: promise对象(异步返回的数据是: response.data)
+ */
 import axios from 'axios'
 export default function ajax (url, data={}, type='GET') {
 
@@ -45,14 +40,3 @@ const result = response.data
 
 const resule = await ajax()
  */
-
-
-
-
-
-
-
-
-
-
-

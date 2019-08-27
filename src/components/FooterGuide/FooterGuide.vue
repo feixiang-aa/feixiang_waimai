@@ -42,6 +42,7 @@ export default {
 <style lang="stylus" scoped>
 @import "../../common/stylus/mixins.styl"
 .footer_guide  //footer
+    display block
     top-border-1px(#e4e4e4)
     // border-top 1px solid #e4e4e4
     position fixed

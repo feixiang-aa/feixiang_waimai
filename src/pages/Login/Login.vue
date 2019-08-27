@@ -1,43 +1,53 @@
 <template>
     <div>
-        <section class="loginContainer">
+    <section class="loginContainer">
       <div class="loginInner">
         <div class="login_header">
           <h2 class="login_logo">飞翔外卖</h2>
           <div class="login_header_title">
-            <a href="javascript:;" class="on">短信登录</a>
-            <a href="javascript:;">密码登录</a>
+            <a href="javascript:;" :class="{on:loginWay}" @click="loginWay=true">短信登录</a>
+            <!-- loginWay为false就选中 -->
+            <!-- !取反 -->
+            <a href="javascript:;" :class="{on:!loginWay}" @click="loginWay=false">密码登录</a>
           </div>
         </div>
         <div class="login_content">
-          <form>
-            <div class="on">
+          <form @submit.prevent="login">
+            <div :class="{on:loginWay}">
               <section class="login_message">
-                <input type="tel" maxlength="11" placeholder="手机号">
-                <button disabled="disabled" class="get_verification">获取验证码</button>
+                <input type="tel" maxlength="11" placeholder="手机号" v-model="phone">
+                <!-- 要取反，为false就可以去点击 -->
+                <button :disabled="!rightPhone" class="get_verification" :class="{right_phone:rightPhone}"
+                @click="getCode">
+                <!-- 如果有值显示是什么内容，否则呢？ -->
+                  {{computeTime>0 ?`已发送(${computeTime}s)` : '获取验证码'}}
+                </button>
               </section>
               <section class="login_verification">
-                <input type="tel" maxlength="8" placeholder="验证码">
+                <input type="tel" maxlength="8" placeholder="验证码" v-model="code">
               </section>
               <section class="login_hint">
                 温馨提示：未注册硅谷外卖帐号的手机号，登录时将自动注册，且代表已同意
                 <a href="javascript:;">《用户服务协议》</a>
               </section>
             </div>
-            <div>
+            <div :class="{on:!loginWay}">
               <section>
                 <section class="login_message">
-                  <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名">
+                  <input type="text" maxlength="11" placeholder="手机/邮箱/用户名" v-model="name">
                 </section>
                 <section class="login_verification">
-                  <input type="tel" maxlength="8" placeholder="密码">
-                  <div class="switch_button off">
-                    <div class="switch_circle"></div>
-                    <span class="switch_text">...</span>
+                  <input type="test" maxlength="8" placeholder="密码" v-if="showPwd" v-model="pwd">
+                  <input type="password" maxlength="8" placeholder="密码" v-else v-model="pwd">
+                  <!-- 如果showPwd显示的是真，那应该显示那个？ -->
+                  <div class="switch_button off" :class="showPwd?'on':'off'" @click="showPwd=!showPwd">
+                    <!-- right是显示密码的时候才有 -->
+                    <div class="switch_circle" :class="{right:showPwd}"></div>
+                    <span class="switch_text">{{ showPwd ? 'abc' : '...' }}</span>
                   </div>
                 </section>
                 <section class="login_message">
-                  <input type="text" maxlength="11" placeholder="验证码">
+                  <input type="text" maxlength="11" placeholder="验证码" v-model="captcha">
                   <img class="get_verification" src="./images/captcha.svg" alt="captcha">
                 </section>
               </section>
@@ -51,14 +61,102 @@
           <i class="iconfont icon-jiantou2"></i>
         </a>
       </div>
+      <AlertTip :alertText="alertText" v-show="alertShow" @closeTip="closeTip"></AlertTip>
     </section>
     </div>
 </template>
 
 <script>
+import AlertTip from "../../components/AlertTip/AlertTip"
 export default {
     name:"login",
+    data(){
+      return{
+        // 登陆方式
+        loginWay: true, // true代表短信登陆，false就代表密码登陆
+        // 双向数据绑定，我要输入手机号后，后面的字变成黑色
+        phone:'',  //手机号
+        computeTime: 0, //计时的时间
+        // 定义一个变量
+        showPwd:false,  //是否显示密码
+        pwd:"",          //密码
+        code:"",         //短信验证码
+        name:"",          //用户名
+        captcha:"",        //图形验证码
+        alertTip:"",       //提示文本
+        alertShow:false    //是否显示警告框
+      }
+    },
+    computed:{
+      rightPhone(){
+        // 创建一个正则对象，
+        // 如果你的phone给我正则匹配那就是一个合法的手机号，那我的值就是true，那我就有找个类名right_phone，然后定义样式
+        return /^1\d{10}$/.test(this.phone)
+      }
+    },
+    methods:{
+      // 这里面主要做两件事：
+      // 异步获取短信验证码
+      getCode(){
+        // 1.启动倒计时
+        // 倒计时30s
+        // 如果当前没有计时
+        if(!this.computeTime){
+          this.computeTime = 30
+          const intervalId = setInterval(() => {
+            this.computeTime--
+            if(this.computeTime<=0){
+              // 停止计时
+              clearInterval(intervalId)
+            }
+          },1000)
+          // 2.发送ajax请求，ajax(向制定手机号发送验证短信)
+        }
+        
+        
+      },
+      showAlert(alertText){
+        this.alertShow = true
+        this.alertText = alertText
+      },
 
+      // 实现异步登陆
+      login(){
+        // 前台表单验证，涉及一个问题叫收集数据
+        // 先判断什么样的登陆方式
+        if(this.loginWay){  //短信登陆
+          const {rightPhone,phonecode} = this
+          if(!this.rightPhone){
+            //如果手机号不对
+            this.showAlert("手机号不正确")
+          }else if(!/^\d{6}/.test(code)){
+            // 验证码必须是6位数字
+            this.showAlert("验证码必须是6位数字")
+
+          }
+        }else{              //密码登陆
+          const {name,pwd,captcha} = this
+          if(!this.name){
+            //必须指定用户名
+            this.showAlert("必须指定用户名")
+          }else  if(!this.pwd){
+            //必须指定密码
+            this.showAlert("必须指定密码")
+          }else if(!this.captcha){
+            //必须指定验证码
+            this.showAlert("必须指定验证码")
+          }
+        }
+
+      },
+      closeTip () {
+        this.alertShow = false
+        this.alertText = ""
+      }
+    },
+    components:{
+      AlertTip
+    }
 }
 </script>
 
@@ -123,6 +221,8 @@ export default {
                   color #ccc
                   font-size 14px
                   background transparent
+                  &.right_phone
+                    color black 
               .login_verification
                 position relative
                 margin-top 16px
@@ -162,6 +262,8 @@ export default {
                     background #fff
                     box-shadow 0 2px 4px 0 rgba(0,0,0,.1)
                     transition transform .3s
+                    &.right
+                      transform  translateX(30px)
               .login_hint
                 margin-top 12px
                 color #999
